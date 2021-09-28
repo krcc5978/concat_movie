@@ -1,13 +1,14 @@
+import numpy as np
 import cv2
 import os
 import argparse
 
 parser = argparse.ArgumentParser(description='動画（画像）縦横連結')
 
-parser.add_argument('--input1', help='入力ファイル1', required=True)
+parser.add_argument('--input1', help='入力ファイル1')
 parser.add_argument('--color_flag1', help='カラー/グレー判別値1', default=True)
 
-parser.add_argument('--input2', help='入力ファイル2', required=True)
+parser.add_argument('--input2', help='入力ファイル2')
 parser.add_argument('--color_flag2', help='カラー/グレー判別値2', default=True)
 
 parser.add_argument('--out_dir', help='出力ディレクトリ', default='./')
@@ -71,10 +72,18 @@ def m_space_hcombine(movie1, movie2, out_dir, out_movie, concat_type, scale_fact
     while True:
         ret1, frame1 = movie1_obj.read()  # 1つ目の動画のフレームを取得
         ret2, frame2 = movie2_obj.read()  # 2つ目の動画のフレームを取得
-        check = ret1 and ret2  # 2つのフレームが共に取得できた時だけTrue（論理演算）
+        check = ret1 or ret2  # 2つのフレームが共に取得できた時だけTrue（論理演算）
         if check:
-            im_info1 = [frame1, color_flag1]  # 画像連結関数への引数1
-            im_info2 = [frame2, color_flag2]  # 画像連結関数への引数2
+
+            if ret1:
+                im_info1 = [frame1, color_flag1]  # 画像連結関数への引数1
+            else:
+                im_info1 = [np.zeros(frame2.shape[:3], dtype='uint8'), color_flag1]  # 画像連結関数への引数1
+
+            if ret2:
+                im_info2 = [frame2, color_flag2]  # 画像連結関数への引数2
+            else:
+                im_info2 = [np.zeros(frame1.shape[:3], dtype='uint8'), color_flag2]  # 画像連結関数への引数1
 
             frame_mix = concat_image(im_info1, im_info2, concat_type)  # 画像連結関数の実行
 
